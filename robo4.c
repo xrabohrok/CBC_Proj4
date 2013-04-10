@@ -39,6 +39,7 @@ const int SCREEN_WIDTH = 159;
 
 void selectColor();
 void moveTowardFoundObject();
+void missingObjects();
 int color = 0;
 int objectFound = 0;
 
@@ -54,6 +55,22 @@ int main()
 	printf("Hello, World!\n");
 	set_each_analog_state(1,1,1,0,0,0,0,0);
 	selectColor();
+    
+    //main loop
+    while(1)
+    {
+        //DO I SEE ANYTHING
+    
+    
+        //avoid any detected obstacles
+        
+        //go to any detected goals
+        
+        //search/wander
+        
+        //data stuff
+        accumulateMoveData();
+    }
 	
 	return 0;
 }
@@ -100,15 +117,18 @@ void accumulateMoveData()
 	float xDisp;
 	float xR;
 	
-	ticksR = get_motor_position_counter(1);
-	ticksL = get_motor_position_counter(0);
+	ticksR = get_motor_position_counter(1); //500
+	ticksL = get_motor_position_counter(0); //350
 	
-	distL = ticksR/ticksPerRev * wheelRad;
-	distR = ticksL/ticksPerRev * wheelRad;
+	distR = ticksR/ticksPerRev * wheelRad; //.135
+	distL = ticksL/ticksPerRev * wheelRad; //.0095454
 	
-	theta = (distL - distR)/axelLength;
+	theta = (distR-distL)/axelLength; //.8364
 	
-	r = distR/theta;
+    if (theta > 0)
+        r = distR/theta; 
+    else
+        r = distL/theta;
 	
 	xdisp = (posX - r - axelLength/2);
 	xR = posX - xdisp;
@@ -173,13 +193,18 @@ void moveTowardFoundObject(){
 		}
 	}
 	else{
-		if(objectFound){
-			objectFound = 1 - objectFound;
-			beep();
-			sleep(0.2);
-			beep();
-		}
+		missingObjects();
 		ao();
 		//printf("No Color match in Frame\n");
 	}
+}
+
+void missingObjects()
+{
+    if(objectFound){
+        objectFound = 1 - objectFound;
+        beep();
+        sleep(0.2);
+        beep();
+    }
 }
