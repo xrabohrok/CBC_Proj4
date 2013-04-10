@@ -23,7 +23,6 @@ const int branch[3][5][2] =
 {{9,5},{5,5},{2,8},{2,8},{3,8}},
 {{9,2},{7,1},{3,1},{3,2},{-1,-1}}
 };
-<<<<<<< HEAD
 
 const float wheelRad = .03f; //meters
 const float axelLength = .15;
