@@ -20,8 +20,8 @@ const int map[11][11] =
 const int branch[3][5][2] = 
 {
 {{9,5},{9,8},{7,8},{-1,-1},{-1,-1}},
-{{9,5},{5,5},{2,8},{2,8},{3,8}},
-{{9,2},{7,1},{3,1},{3,2},{-1,-1}}
+{{9,5},{5,5},{5,8},{2,8},{3,8}},
+{{9,5},{9,1},{3,1},{3,2},{-1,-1},{-1,-1}}
 };
 
 const float wheelRad = .03f; //meters
@@ -30,7 +30,7 @@ const float PI = 3.1415926f;
 
 const float cellSize = .3f; //meters
 
-const int ticksPerRev = 1060;
+const int ticksPerRev = 1045;
 
 const int SPEED = 300;
 const int MIN_OBJECT_SIZE  = 10;
@@ -57,6 +57,11 @@ int cellY;
 float posX; //meters
 float posY; //meters
 float rot;  //rad
+int goal = 0; //to 2
+int goalDir = 0;
+int link = 0; //of nodes of chain
+int direction = 1; //1 = forward, -1 = backward
+int facing = 0; //where 0 is facing down the hallway(negative) and advances ccw to 3
 
 int main() 
 {
@@ -69,22 +74,72 @@ int main()
 	printf("Hello, World!\n");
 	set_each_analog_state(1,1,1,0,0,0,0,0);
 	selectColor();
-    Rotate90();
-	moveSquare();
     //main loop
-    //while(1)
+    while(1)
     {
         //DO I SEE ANYTHING
 		
-    
-        //avoid any detected obstacles
+		//look at goal, am I there
+		//yes
+		if(branch[goal][link][0] == cellY && branch[goal][link][1] == cellX)
+		{
+			//advance goal chain
+			link += direction;
+			//overlimit
+			if(link >= 5 || link < 0)
+			{
+				direction *= -1;
+				link += 2 * direction;
+			}
+			else if(branch[goal][link][0] == -1)
+			{
+				direction *= -1;
+				link += 2 * direction;
+			}
+			printf("new Destination: %d, %d", branch[goal][link][0], branch[goal][link][1]);
+		}
+		
+		//am I facing goal?
+		//needs to be...(x resolved first, unless map says no)
+		if(cellX < branch[goal][link][1] && map[cellY][cellX-1] == 0)
+		{
+			goalDir = 3;
+		}
+		else if(cellX < branch[goal][link][1] && map[cellY][cellX+1] == 0)
+		{
+			goalDir = 1;
+		}
+		else if(cellY < branch[goal][link][0] && map[cellY-1][cellX] == 0)
+		{
+			goalDir = 0;
+		}
+		else if(cellY > branch[goal][link][0] && map[cellY+1][cellX] == 0)
+		{
+			goalDir = 2;
+		}
+		
+		//if not right facing, resolve now
+		while(facing != goalDir)
+		{
+			Rotate90();
+			facing++;
+			if(facing > 3)
+				facing = 0;
+		}
+		
+		//move forward
+		if(facing == 0)
+			cellY--;
+		else if (facing == 2)
+			cellY++;
+		else if(facing = 1)
+			cellX++;
+		else if (facing == 3)
+			cellX--;
+		
+		moveSquare();
+
         
-        //go to any detected goals
-        
-        //search/wander
-        
-        //data stuff
-        //accumulateMoveData();
 		sleep(.5f);
     }
 	
