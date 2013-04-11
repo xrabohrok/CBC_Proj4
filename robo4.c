@@ -2,7 +2,7 @@
 // Created on Tue Apr 9 2013
 
 //define map here
-const int map[22][22] = 
+const int map[11][11] = 
 {{2,2,2,2,2,2,2,2,2,2,2}, //0
  {2,0,0,0,2,0,0,0,0,0,2}, //1
  {2,0,0,0,2,0,0,0,0,0,2}, //2
@@ -26,7 +26,7 @@ const int branch[3][5][2] =
 
 const float wheelRad = .03f; //meters
 const float axelLength = .15f;
-const float PI = 3.142f;
+const float PI = 3.1415926f;
 
 const float cellSize = .3f; //meters
 
@@ -36,7 +36,7 @@ const int SPEED = 300;
 const int MIN_OBJECT_SIZE  = 10;
 const int SCREEN_WIDTH = 159;
 
-const float ROT_THRESH = .06f;
+const float ROT_THRESH = .2f;
 
 #include <stdio.h>
 
@@ -134,11 +134,12 @@ void accumulateMoveData()
 	ticksR = get_motor_position_counter(3); //500
 	ticksL = get_motor_position_counter(0); //350
 	
-	distR = (float)(ticksR)/ticksPerRev * wheelRad * PI ; //.135
-	distL = (float)(ticksL)/ticksPerRev * wheelRad * PI ; //.0095454
+	distR = ((float)(ticksR))/((float)ticksPerRev) * wheelRad * PI *2; //.135
+	distL = ((float)(ticksL))/((float)ticksPerRev) * wheelRad * PI *2; //.0095454
 	
-	theta = (distR-distL)/(axelLength/2); //.8364
-	//printf("distances l %f r %f", distL, distR);
+	theta = ((distL-distR)/2)/(((float)axelLength)/2); //.8364
+	//theta = ((float)(ticksR - ticksL))/((float)(ticksPerRev)) * 2 * PI;
+	//printf("ticks %d %d distances l %f r %f t%f",ticksR, ticksL, distL, distR, theta);
 	
     if (theta > 0)
         r = distR/theta; 
@@ -211,16 +212,18 @@ void rotateTo(int x, int y)
 	printf ("dest:%f, rot:%f\n", destAngle, rot);
 	if (rot > destAngle + ROT_THRESH)
 	{
-		mav(0,SPEED/2);
-		mav(3,-SPEED/2);
-	}
-	else if (rot < destAngle - ROT_THRESH)
-	{
 		mav(0,-SPEED/2);
 		mav(3,SPEED/2);
 	}
-	else
+	else if (rot < destAngle - ROT_THRESH)
 	{
+		mav(0,SPEED/2);
+		mav(3,-SPEED/2);
+	}
+	
+	if(rot > destAngle - ROT_THRESH && rot < destAngle + ROT_THRESH)
+	{
+		beep();
 		ao();
 	}	
 }
