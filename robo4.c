@@ -30,7 +30,7 @@ const float PI = 3.1415926f;
 
 const float cellSize = .3f; //meters
 
-const int ticksPerRev = 1100;
+const int ticksPerRev = 1060;
 
 const int SPEED = 300;
 const int MIN_OBJECT_SIZE  = 10;
@@ -43,7 +43,8 @@ const float ROT_THRESH = .2f;
 void selectColor();
 void moveTowardFoundObject();
 void missingObjects();
-void rotateTo(int x, int y);
+void Rotate90();
+void moveSquare();
 void accumulateMoveData();
 
 
@@ -61,19 +62,20 @@ int main()
 {
 	posX = 0;
 	posY = 0;
-	rot = PI;
+	rot = 1.5f * PI;
 	cellX = 5;
 	cellY = 9;
 	
 	printf("Hello, World!\n");
 	set_each_analog_state(1,1,1,0,0,0,0,0);
 	selectColor();
-    
+    Rotate90();
+	moveSquare();
     //main loop
-    while(1)
+    //while(1)
     {
         //DO I SEE ANYTHING
-		rotateTo(9,9);
+		
     
         //avoid any detected obstacles
         
@@ -82,7 +84,7 @@ int main()
         //search/wander
         
         //data stuff
-        accumulateMoveData();
+        //accumulateMoveData();
 		sleep(.5f);
     }
 	
@@ -130,12 +132,14 @@ void accumulateMoveData()
 	float xDiff;
 	float xDisp;
 	float xR;
+	float d;
 	
 	ticksR = get_motor_position_counter(3); //500
 	ticksL = get_motor_position_counter(0); //350
 	
 	distR = ((float)(ticksR))/((float)ticksPerRev) * wheelRad * PI *2; //.135
 	distL = ((float)(ticksL))/((float)ticksPerRev) * wheelRad * PI *2; //.0095454
+	
 	
 	theta = ((distL-distR)/2)/(((float)axelLength)/2); //.8364
 	//theta = ((float)(ticksR - ticksL))/((float)(ticksPerRev)) * 2 * PI;
@@ -146,21 +150,15 @@ void accumulateMoveData()
     else
         r = distL/theta;
 	
-	xDisp = (posX - r - axelLength/2);
-	xR = posX - xDisp;
-	//make sure not spinning in place
-	if(!((distL > 0 && distR < 0) || (distL < 0 && distR > 0)))
-	{
-		posX = xR * cos(theta)  + xDisp;//- 0 * sin(theta);
-		posY = xR * sin(theta) + posY; //- 0 * sin(theta);
-	}
+	d = theta *(r + axelLength/2) ;
 	
 	rot += theta;
-	
 	
 	while (rot < 0)
 		rot += 2 *PI;
 	
+	posX = cos(rot) * rot;
+	posY = sin(rot) * rot;
 	
 	cellX = posX / cellSize + 5;
 	cellY = posY / cellSize + 9;
@@ -172,60 +170,48 @@ void accumulateMoveData()
 }
 
 //rotates to face cell provided
-void rotateTo(int x, int y)
+void Rotate90()
 {
-	float diffX = (x - cellX) * cellSize;
-	float diffY = (y - cellY) * cellSize;
+	//a 90 degree rotation is 1/4 of a turn of the robot, or the distance of one of the wheels traveling that distance
+	float quarterTurn;
+	float revs;
+	//the number of ticks needed
+	int ticksNeeded;
 	
-	float destAngle = atan(diffY/diffX);
-	//since there is not tan2...
-	//quad1
-	if(diffX > 0 && diffY > 0)
-	{
-		//if(destAngle < 0)
-		//	destAngle = -1;
-	}
-	//quad2
-	else if(diffX > 0 && diffY < 0)
-	{
-		if(destAngle < 0)
-			destAngle += PI/2;
-	}
-	//quad3
-	else if(diffX < 0 && diffY < 0)
-	{
-		if(destAngle > 0)
-			destAngle += PI;
-	}
-	//quad4
-	else if(diffX > 0 && diffY > 0)
-	{
-		if(destAngle < 0)
-			destAngle += PI * 1.5;
-	}
-	
-	while (destAngle >= PI * 2)
-		destAngle -= PI * 2;
 
 	
+	quarterTurn = .25f * (2 * PI * axelLength/2);
+	revs = quarterTurn / (2 * PI * wheelRad);
+	ticksNeeded = ticksPerRev * revs;
 	
-	printf ("dest:%f, rot:%f\n", destAngle, rot);
-	if (rot > destAngle + ROT_THRESH)
+	//printf("needtorotate %d", ticksNeeded);
+	
+	move_relative_position(0, SPEED, -ticksNeeded);
+	move_relative_position(3, SPEED, ticksNeeded);
+	
+	while((get_motor_done(0)==0))
 	{
-		mav(0,-SPEED/2);
-		mav(3,SPEED/2);
-	}
-	else if (rot < destAngle - ROT_THRESH)
-	{
-		mav(0,SPEED/2);
-		mav(3,-SPEED/2);
+		sleep(.5);
 	}
 	
-	if(rot > destAngle - ROT_THRESH && rot < destAngle + ROT_THRESH)
+}
+
+void moveSquare()
+{
+	float revs;
+	int ticksNeeded;
+	
+	revs = cellSize / (2 * PI * wheelRad);
+	ticksNeeded = ticksPerRev * revs;
+	
+	move_relative_position(0, SPEED, ticksNeeded);
+	move_relative_position(3, SPEED, ticksNeeded);
+	
+	//printf("done? %d", get_motor_done(0));
+	while((get_motor_done(0)==0))
 	{
-		beep();
-		ao();
-	}	
+		sleep(.5);
+	}
 }
 
 void evasiveManuver(int ticks)
