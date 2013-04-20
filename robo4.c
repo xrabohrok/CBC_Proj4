@@ -154,7 +154,7 @@ int main()
 			{	
 				printf("%d vs %d", facing, goalDir);
 				Rotate90();	
-				facing++;
+				
 				
 			}
 			moveSquare();
@@ -200,55 +200,7 @@ void selectRooms(){
 	sleep(2.0);
 	
 }
-//determines location and cell from that info
-void accumulateMoveData()
-{
-	//lord help me if this math is wrong
-	int ticksR; 
-	int ticksL;
-	float distL;
-	float distR;
-	float theta;
-	float r;
-	float xDiff;
-	float xDisp;
-	float xR;
-	float d;
-	
-	ticksR = get_motor_position_counter(3); //500
-	ticksL = get_motor_position_counter(0); //350
-	
-	distR = ((float)(ticksR))/((float)ticksPerRev) * wheelRad * PI *2; //.135
-	distL = ((float)(ticksL))/((float)ticksPerRev) * wheelRad * PI *2; //.0095454
-	
-	
-	theta = ((distL-distR)/2)/(((float)axelLength)/2); //.8364
-	//theta = ((float)(ticksR - ticksL))/((float)(ticksPerRev)) * 2 * PI;
-	//printf("ticks %d %d distances l %f r %f t%f",ticksR, ticksL, distL, distR, theta);
-	
-    if (theta > 0)
-        r = distR/theta; 
-    else
-        r = distL/theta;
-	
-	d = theta *(r + axelLength/2) ;
-	
-	rot += theta;
-	
-	while (rot < 0)
-		rot += 2 *PI;
-	
-	posX = cos(rot) * rot;
-	posY = sin(rot) * rot;
-	
-	cellX = posX / cellSize + 5;
-	cellY = posY / cellSize + 9;
-	
-	clear_motor_position_counter(0);
-	clear_motor_position_counter(3);
-	//clear_motor_position_counter(motor)
-	//get_motor_position_counter(motor)
-}
+
 
 //rotates to face cell provided
 void Rotate90()
@@ -274,6 +226,7 @@ void Rotate90()
 	{
 		sleep(.5);
 	}
+	facing++;
 	if(facing > 3)	
 		facing = 0;	
 	
