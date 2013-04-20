@@ -54,6 +54,7 @@ void Rotate90();
 void moveSquare();
 void accumulateMoveData();
 void initializeNodes();
+void checkForObstacle();
 
 
 int targetColor = 1;
@@ -176,6 +177,7 @@ int main()
 				
 				
 			}
+			checkForObstacle();
 			moveSquare();
 			//move forward	
 			        		//sleep(.5f);
@@ -344,6 +346,7 @@ void missingObjects()
     }
 }
 
+
 void initializeNodes()
 {
 	int i = 0;
@@ -404,3 +407,56 @@ void initializeNodes()
 	allRooms[4].neighbor[2] = &(allRooms[2]);
 	allRooms[4].neighbor[3] = 0;
 }
+
+void checkForObstacle(){
+	track_update();
+	int size[10];
+	int i;
+	int ETsensorData = 0;
+	int x;
+	for(i = 0; i < 10; i++)
+		size[i] = track_size(obstacleColor,i);
+	for( i = 0; i < 10; i++){
+		if (track_count(obstacleColor) > i && size[i] >= MIN_OBJECT_SIZE)
+		{
+			x = track_x(obstacleColor,i); 
+			if(x >= (SCREEN_WIDTH/2) - SCREEN_WIDTH/6 && x <= (SCREEN_WIDTH/2) + SCREEN_WIDTH/6){
+				ETsensorData = analog10(2);
+			//	printf("Biggest blob is center\n %d",ETsensorData);
+				if(ETsensorData < 550 && ETsensorData > 300 ){
+					switch(facing){
+						case 0:
+							if(cellY > 0){
+							map[cellY-1][cellX] = 1;
+								printf("Obstacle Detected y:%d x:%d\n",cellY-1,cellX);
+							}
+							break;
+						case 1:
+							if(cellX > 0){
+							map[cellY][cellX-1] = 1;
+								printf("Obstacle Detected y:%d x:%d\n",cellY,cellX-1);
+							}
+							break;
+						case 2:
+							if(cellY < 10){
+							map[cellY+1][cellX] = 1;
+								printf("Obstacle Detected y:%d x:%d\n",cellY+1,cellX);
+							}
+							break;
+						case 3:
+							if(cellX < 10){
+							map[cellY][cellX+1] = 1;
+								printf("Obstacle Detected y:%d x:%d\n",cellY,cellX+1);
+							}
+							break;
+					}
+					
+				}
+			}
+		}
+		else
+			break;
+		
+	}
+}
+
