@@ -154,9 +154,10 @@ int main()
 			{	
 				printf("%d vs %d", facing, goalDir);
 				Rotate90();	
-				checkForObstacle();
+				
 				
 			}
+			checkForObstacle();
 			moveSquare();
 			//move forward	
 			        		//sleep(.5f);
@@ -274,6 +275,7 @@ void Rotate90()
 	{
 		sleep(.5);
 	}
+	facing++;
 	if(facing > 3)	
 		facing = 0;	
 	
@@ -385,22 +387,31 @@ void checkForObstacle(){
 				if(ETsensorData < 550 && ETsensorData > 300 ){
 					switch(facing){
 						case 0:
-							if(cellY > 0)
+							if(cellY > 0){
 							map[cellY-1][cellX] = 1;
+								printf("Obstacle Detected y:%d x:%d\n",cellY-1,cellX);
+							}
 							break;
 						case 1:
-							if(cellX > 0)
+							if(cellX > 0){
 							map[cellY][cellX-1] = 1;
+								printf("Obstacle Detected y:%d x:%d\n",cellY,cellX-1);
+							}
 							break;
 						case 2:
-							if(cellY < 10)
+							if(cellY < 10){
 							map[cellY+1][cellX] = 1;
+								printf("Obstacle Detected y:%d x:%d\n",cellY+1,cellX);
+							}
 							break;
 						case 3:
-							if(cellX < 10)
+							if(cellX < 10){
 							map[cellY][cellX+1] = 1;
+								printf("Obstacle Detected y:%d x:%d\n",cellY,cellX+1);
+							}
 							break;
 					}
+					
 				}
 			}
 		}
