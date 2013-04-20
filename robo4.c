@@ -43,14 +43,17 @@ const float ROT_THRESH = .2f;
 
 #include <stdio.h>
 
-void selectColor();
+void selectRooms();
 void moveTowardFoundObject();
 void missingObjects();
 void Rotate90();
 void moveSquare();
 void accumulateMoveData();
 
-int color = 0;
+int targetColor = 1;
+int obstacleColor = 2;
+int currentRoom = 1;
+int targetRoom  = 1;
 int objectFound = 0;
 
 
@@ -76,7 +79,7 @@ int main()
 	cellY = 9;
 	
 	set_each_analog_state(1,1,1,0,0,0,0,0);
-	selectColor();
+	selectRooms();
     //main loop
     while(1)    
 	{ 
@@ -84,8 +87,8 @@ int main()
 		//look at goal, am I there	
 		//yes
 		track_update();
-		int size = track_size(color,0);
-		if (track_count(color) > 0 && size >= MIN_OBJECT_SIZE)
+		int size = track_size(targetColor,0);
+		if (track_count(targetColor) > 0 && size >= MIN_OBJECT_SIZE)
 		{
 			triggered = 1;
 		}
@@ -167,27 +170,28 @@ int main()
 	
 	return 0;
 }
-void selectColor(){
-	printf("Orange\n");
+void selectRooms(){
+	printf("Press A button to cycle\n");
+	printf("Press B button to select\n");
+	printf("Starting Room %d\n",currentRoom);
 	while(!b_button()){
 		if(a_button()){
-			color++;
-			if(color >= 4)
-				color = 0;
-			switch(color){
-				case 0:
-				 printf("Orange\n");
-				break;
-				case 1:
-				 printf("Pink\n");	
-				break;
-				case 2:
-			      printf("Green\n");		 
-				break;
-				case 3:
-				  printf("Blue\n");	
-				break;
-			}
+			currentRoom++;
+			if(currentRoom > 4)
+				currentRoom = 1;
+			printf("Starting Room %d\n",currentRoom);
+		}
+		
+	}
+	printf("Press A button to cycle\n");
+	printf("Press B button to select\n");
+	printf("Target Room %d\n",targetRoom);
+	while(!b_button()){
+		if(a_button()){
+			targetRoom++;
+			if(targetRoom > 4)
+				targetRoom = 1;
+			printf("Target Room %d\n",targetRoom);
 		}
 		
 	}
@@ -301,15 +305,15 @@ void moveTowardFoundObject(){
 	int x;
 	int y;
 	track_update();
-	int size = track_size(color,0);
+	int size = track_size(targetColor,0);
 	int ETsensorData = 0;
-	if (track_count(color) > 0 && size >= MIN_OBJECT_SIZE){
+	if (track_count(targetColor) > 0 && size >= MIN_OBJECT_SIZE){
 			if(!objectFound){
 				objectFound = 1 - objectFound;
 				beep();
 			}
-		x = track_x(color,0); 
-		y = track_y(color,0);	
+		x = track_x(targetColor,0); 
+		y = track_y(targetColor,0);	
 		if(x <= (SCREEN_WIDTH/2) - SCREEN_WIDTH/12){
 				//printf("Biggest blob is left\n");
 				mav(0,-SPEED/3);
