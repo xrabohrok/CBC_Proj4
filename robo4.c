@@ -1,8 +1,12 @@
 //Westin Breger
 // Created on Tue Apr 9 2013
+//updated for part 2 on april 20
+
+//1 orange
+//2 green
 
 //define map here
-const int map[11][11] = 
+int map[11][11] = 
 {{2,2,2,2,2,2,2,2,2,2,2}, //0
  {2,0,0,0,2,0,0,0,0,0,2}, //1
  {2,0,0,0,2,0,0,0,0,0,2}, //2
@@ -50,10 +54,15 @@ void Rotate90();
 void moveSquare();
 void accumulateMoveData();
 
+
 int targetColor = 1;
 int obstacleColor = 2;
 int currentRoom = 1;
 int targetRoom  = 1;
+int direction = 1; //1 = forward, -1 = backward
+int facing = 0; //where 0 is facing down the hallway(negative) and advances ccw to 3
+
+int color = 0;
 int objectFound = 0;
 
 
@@ -68,8 +77,7 @@ int main()
 	int goal = 0; //to 2
 	int goalDir = 0;
 	int link = 0; //of nodes of chain
-	int direction = 1; //1 = forward, -1 = backward
-	int facing = 0; //where 0 is facing down the hallway(negative) and advances ccw to 3
+	
 	int triggered = 0;
 	
 	posX = 0;
@@ -147,19 +155,11 @@ int main()
 				printf("%d vs %d", facing, goalDir);
 				Rotate90();	
 				facing++;
-				if(facing > 3)	
-					facing = 0;	
+				
 			}
 			moveSquare();
 			//move forward	
-			if(facing == 0)	
-				cellY--;
-			else if (facing == 2)
-				cellY++;
-			else if(facing == 1)
-				cellX--;
-			else if (facing == 3)	
-				cellX++;        		//sleep(.5f);
+			        		//sleep(.5f);
 		}
 		else
 		{
@@ -274,6 +274,8 @@ void Rotate90()
 	{
 		sleep(.5);
 	}
+	if(facing > 3)	
+		facing = 0;	
 	
 	
 }
@@ -294,6 +296,14 @@ void moveSquare()
 	{
 		sleep(.5);
 	}
+	if(facing == 0)	
+		cellY--;
+	else if (facing == 2)
+		cellY++;
+	else if(facing == 1)
+		cellX--;
+	else if (facing == 3)	
+		cellX++;
 }
 
 void evasiveManuver(int ticks)
