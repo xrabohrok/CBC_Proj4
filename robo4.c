@@ -53,6 +53,7 @@ void missingObjects();
 void Rotate90();
 void moveSquare();
 void accumulateMoveData();
+void initializeNodes();
 
 
 int targetColor = 1;
@@ -72,13 +73,31 @@ float posX; //meters
 float posY; //meters
 float rot;  //rad
 
+
+
+struct room
+{
+	int designation;
+	int alleys[2][2]; //[node][coord]
+	struct room *neighbor[4];
+};
+
+struct room allRooms[5];
+
 int main() 
 {
+	
 	int goal = 0; //to 2
 	int goalDir = 0;
 	int link = 0; //of nodes of chain
 	
+	
 	int triggered = 0;
+	
+	
+	initializeNodes();
+	
+	
 	
 	posX = 0;
 	posY = 0;
@@ -170,6 +189,8 @@ int main()
 	
 	return 0;
 }
+
+
 void selectRooms(){
 	printf("Press A button to cycle\n");
 	printf("Press B button to select\n");
@@ -198,6 +219,8 @@ void selectRooms(){
 	printf("Hit A button to start search\n");
 	while(!a_button());
 	sleep(2.0);
+	
+	//now that we know our destination and start, we can figure out a path
 	
 }
 
@@ -319,4 +342,65 @@ void missingObjects()
         sleep(0.2);
         beep();
     }
+}
+
+void initializeNodes()
+{
+	int i = 0;
+	
+	allRooms[0].designation = 0; //hall
+	allRooms[0].alleys[0][0] = 5;
+	allRooms[0].alleys[0][1] = 8;
+	allRooms[0].alleys[1][0] = 3;
+	allRooms[0].alleys[1][0] = 5;
+	
+	allRooms[1].designation = 1; //northeast
+	allRooms[1].alleys[0][0] = 3;
+	allRooms[1].alleys[0][1] = 5;
+	allRooms[1].alleys[1][0] = -1;
+	allRooms[1].alleys[1][1] = -1;
+	
+	allRooms[2].designation = 2; //southeast
+	allRooms[2].alleys[0][0] = 6;
+	allRooms[2].alleys[0][1] = 9;
+	allRooms[2].alleys[1][0] = -1;
+	allRooms[2].alleys[1][1] = -1;
+	
+	allRooms[3].designation = 3; //northwest
+	allRooms[3].alleys[0][0] = 1;
+	allRooms[3].alleys[0][1] = 5;
+	allRooms[3].alleys[1][0] = -1;
+	allRooms[3].alleys[1][1] = -1;
+	
+	allRooms[4].designation = 4; //southwest
+	allRooms[4].alleys[0][0] = 1;
+	allRooms[4].alleys[0][1] = 5;
+	allRooms[4].alleys[1][0] = 4;
+	allRooms[4].alleys[1][1] = 9;
+	
+	
+	//declare neighbors for rooms
+	allRooms[1].neighbor[0] = &(allRooms[0]);
+	for (i = 1; i < 4; i++)
+	{
+		allRooms[1].neighbor[i] = 0;
+	}
+	
+	allRooms[2].neighbor[0] = &(allRooms[0]);
+	allRooms[2].neighbor[1] = &(allRooms[4]);
+	for (i = 2; i < 4; i++)
+	{
+		allRooms[2].neighbor[i] = 0;
+	}
+	
+	allRooms[3].neighbor[0] = &(allRooms[4]);
+	for(i = 1; i < 4; i++)
+	{
+		allRooms[3].neighbor[i] = 0;
+	}
+	
+	allRooms[4].neighbor[0] = &(allRooms[3]);
+	allRooms[4].neighbor[1] = &(allRooms[0]);
+	allRooms[4].neighbor[2] = &(allRooms[2]);
+	allRooms[4].neighbor[3] = 0;
 }
