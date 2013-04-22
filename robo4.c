@@ -28,19 +28,20 @@ const int branch[3][5][2] =
 {{9,2},{7,1},{3,1},{3,2},{-1,-1}}
 };
 
-const float wheelRad = .03f; //meters
-const float axelLength = .15f;
+const float wheelRad = .033f; //meters
+const float axelLength = .153f;
 const float PI = 3.1415926f;
 
-const float cellSize = .3f; //meters
+const float cellSize = .3048f; //meters
 
-const int ticksPerRev = 1060;
+const int ticksPerRev = 1100;
 
 const int SPEED = 300;
 const int MIN_OBJECT_SIZE  = 10;
+const int MIN_OBSTACLE_SIZE = 30;
 const int SCREEN_WIDTH = 159;
 
-const int TICK_SHAVE = 30; //subtracts these ticks from rotation, because 
+const int TICK_SHAVE = 0; //subtracts these ticks from rotation, because 
 
 const float ROT_THRESH = .2f;
 
@@ -144,40 +145,80 @@ int main()
 					direction *= -1;
 					link += 2 * direction;
 				}
-				printf("new Destination: %d, %d", branch[goal][link][0], branch[goal][link][1]);
+				printf("new Destination: %d, %d\n", branch[goal][link][0], branch[goal][link][1]);
 			}
 			//am I facing goal?	
 			//needs to be...(x resolved first, unless map says no)
-			printf("\t\t%d, %d", cellY, cellX);
-			if(cellX > branch[goal][link][1] && map[cellY][cellX-1] == 0)
+			printf("\t\t%d, %d\n", cellY, cellX);
+			checkForObstacle();
+			goalDir = -1;
+			int horiz = 0;
+			int vert = 0;
+			while (goalDir ==-1)
 			{
-				goalDir = 1;
-				printf("west\n");
-			}	
-			else if(cellX < branch[goal][link][1] && map[cellY][cellX+1] == 0)
-			{
-				goalDir = 3;	
-				printf("east\n");	
-			}
-			else if(cellY > branch[goal][link][0] && map[cellY-1][cellX] == 0)
-			{	
-				goalDir = 0;
-				printf("north\n");	
-			}
-			else if(cellY < branch[goal][link][0] && map[cellY+1][cellX] == 0)
-			{	
-				goalDir = 2;	
-				printf("south\n");
+				if((vert == 1 || cellX > branch[goal][link][1]) && map[cellY][cellX-1] == 0)
+				{
+					goalDir = 1;
+					printf("west\n");
+				}	
+				else
+				{
+					if(cellX > branch[goal][link][1])
+					{
+						horiz = 1;
+					}
+				}
+				
+				if((vert == 1 || cellX < branch[goal][link][1]) && map[cellY][cellX+1] == 0)
+				{
+					goalDir = 3;	
+					printf("east\n");	
+				}
+				else
+				{
+					if(cellX < branch[goal][link][1])
+					{
+						horiz = 1;
+					}
+				}
+				
+				if((horiz == 1 || cellY > branch[goal][link][0]) && map[cellY-1][cellX] == 0)
+				{	
+					goalDir = 0;
+					printf("north\n");	
+				}
+				else
+				{
+					if(cellY > branch[goal][link][0])
+					{
+						vert = 1;
+					}
+				}
+				
+				if((horiz == 1 || cellY < branch[goal][link][0]) && map[cellY+1][cellX] == 0)
+				{	
+					goalDir = 2;	
+					printf("south\n");
+				}
+				else
+				{
+					if(cellY < branch[goal][link][0])
+					{
+						vert = 1;
+					}
+				}
 			}	
 			//if not right facing, resolve now
-			while(facing != goalDir)
-			{	
-				printf("%d vs %d", facing, goalDir);
-				Rotate90();	
-				
-				
+			if(facing != goalDir){
+				while(facing != goalDir)
+				{	
+					printf("%d vs %d", facing, goalDir);
+					Rotate90();	
+					
+					
+				}
 			}
-			checkForObstacle();
+			else
 			moveSquare();
 			//move forward	
 			        		//sleep(.5f);
@@ -238,9 +279,9 @@ void Rotate90()
 	
 
 	
-	quarterTurn = .25f * (2 * PI * axelLength/2);
+	quarterTurn = .25f * ( PI * axelLength);
 	revs = quarterTurn / (2 * PI * wheelRad);
-	ticksNeeded = ticksPerRev * revs -TICK_SHAVE;
+	ticksNeeded = ticksPerRev * revs;// -TICK_SHAVE;
 	
 	//printf("needtorotate %d", ticksNeeded);
 	
@@ -417,13 +458,13 @@ void checkForObstacle(){
 	for(i = 0; i < 10; i++)
 		size[i] = track_size(obstacleColor,i);
 	for( i = 0; i < 10; i++){
-		if (track_count(obstacleColor) > i && size[i] >= MIN_OBJECT_SIZE)
+		if (track_count(obstacleColor) > i && size[i] >= MIN_OBSTACLE_SIZE)
 		{
 			x = track_x(obstacleColor,i); 
-			if(x >= (SCREEN_WIDTH/2) - SCREEN_WIDTH/6 && x <= (SCREEN_WIDTH/2) + SCREEN_WIDTH/6){
+			if(x >= (SCREEN_WIDTH/2) - SCREEN_WIDTH/3 && x <= (SCREEN_WIDTH/2) + SCREEN_WIDTH/3){
 				ETsensorData = analog10(2);
 			//	printf("Biggest blob is center\n %d",ETsensorData);
-				if(ETsensorData < 550 && ETsensorData > 300 ){
+				//if(ETsensorData < 550 && ETsensorData > 300 ){
 					switch(facing){
 						case 0:
 							if(cellY > 0){
@@ -451,11 +492,16 @@ void checkForObstacle(){
 							break;
 					}
 					
-				}
+				//}
+			}
+			else{
+				//printf("Not in middle\n");
 			}
 		}
-		else
+		else{
+			//printf("Too Small\n");
 			break;
+		}
 		
 	}
 }
