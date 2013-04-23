@@ -21,12 +21,16 @@ int map[11][11] =
 //0,1,2,3,4,5,6,7,8,9,10
 //define goal nodes here
 //branch-node-coords
-const int branch[3][5][2] = 
-{
-{{9,5},{9,8},{7,8},{-1,-1},{-1,-1}},
-{{9,5},{5,5},{2,8},{2,8},{3,8}},
-{{9,2},{7,1},{3,1},{3,2},{-1,-1}}
-};
+ 
+ //x,y
+int dests[5][2] = {
+	{-1,-1},
+	{8,2},
+	{8,8},
+	{2,2},
+	{2,8}};
+ 
+
 
 const float WHEEL_RAD = .033f; //meters
 const float AXEL_LENGTH = .153f;
@@ -55,9 +59,17 @@ void missingObjects();
 void Rotate90(int direction);
 void moveSquare();
 void accumulateMoveData();
-void initializeNodes();
 void checkForObstacle();
 void moveTowardTargetByGrid();
+
+
+void setPath();
+void pushStack();
+void popStack();
+void pushClosed();
+void popClosed();
+
+
 
 int targetColor = 1;
 int obstacleColor = 2;
@@ -65,6 +77,13 @@ int currentRoom = 1;
 int targetRoom  = 1;
 int direction = 1; //1 = forward, -1 = backward
 int facing = 0; //where 0 is facing down the hallway(negative) and advances ccw to 3
+
+int pathSize = 0;
+int stackHead = 0;
+int closedHead = 0;
+int stack[100][2];
+int closed[80][2];
+int path[30][2];
 
 int color = 0;
 int objectFound = 0;
@@ -80,14 +99,17 @@ float rot;  //rad
 
 
 
-struct room
-{
-	int designation;
-	int alleys[2][2]; //[node][coord]
-	struct room *neighbor[4];
+struct cell{
+	int x;
+	int y;
+	int cost;
+	int currCost;
+	int prevX;
+	int prevY;
+	
 };
 
-struct room allRooms[5];
+
 
 int main() 
 {
@@ -100,7 +122,6 @@ int main()
 	int triggered = 0;
 	
 	
-	initializeNodes();
 	
 	
 	
@@ -416,91 +437,229 @@ void setPath()
 	//currentRoom
 	//targetRoom
 	
-/*	struct room *roomStart = &(allRooms[currentRoom]);
-	struct room *roomEnd = &(allRooms[targetRoom]);
+
+	//initizlize A* stuff
+	struct cell map2[11][11];
+	int i = 0;
+	int j = 0;
+	int currentX = 0;
+	int currentY = 0;
+	int lowCost = 1000000;
+	int focus = 0;
+	int found = 0;
+	int salePrice = 0;
+	int directions[4][2] = {
+		{0,1},
+		{0,-1},
+		{1,0},
+		{-1, 0}};
 	
-	int now = currentRoom;
-	int roomSearched[5];
-	int path[4];
-	int i = 0;	
-	int check = 0;
 	
-	for (i = 0; i < 5; i++)
+	int destX = 0;
+	int destY = 0;
+	
+	
+	for(i = 0; i < 11; i++)
 	{
-		roomSearched[i] = 0;
-	}
-	
-	while ( now != roomEnd)
-	{
-		//find the first unsearched neighbor
-		for(i = 0; i < 4; i++)
+		for(j = 0; j < 11; j++)
 		{
+			map2[i][j].x = i;
+			map2[i][j].y = j;
+			map2[i][j].currCost = 100000000;
+			map2[i][j].prevX = -1;
+			map2[i][j].prevY = -1;
+			
+			if (map[i][j] > 0 )
+			{
+				map2[i][j].cost = 1000;
+			}
+			else
+			{
+				map2[i][j].cost = 1;
+			}
 		}
+	}	
+
+	
+	for(i = 0; i < 100; i++)
+	{
+		stack[i][0] = -1;
+		stack[i][1] = -1;
 	}
-	*/
+	stackHead = 0;
+	
+	for(i = 0; i < 30; i++)
+	{
+		path[i][0] = -1;
+		path[i][1] = -1;
+	}
+	pathSize = 0;
+	
+	currentX = cellX;
+	currentY = cellY;
+	
+	destX = dests[targetRoom][0];
+	destY = dests[targetRoom][1];
+	
+	//end initialization
+	pushStack(currentX, currentY);
+	
+	//begin A*
+	while(currentX != destX || currentY != destY)
+	{
+		//find cheapest node
+		lowCost = 1000000;
+		for(i = 0; i < stackHead; i++)
+		{
+			if( map2[stack[i][1]][stack[i][0]].currCost < lowCost)
+			{
+				focus = i;
+			}
+		}
+		
+		currentX = stack[focus][0];
+		currentY = stack[focus][1];
+		
+		//remove the node we are at from consideration
+		popStack(currentX, currentY);
+		pushClosed(currentX, currentY);
+		
+		//add all unadded neighbors to the set
+		//left
+		found = 0;
+		for(j = 0; j < 4; j++)
+		{
+			//bounds check
+			if(currentX + directions[j][0] >= 0 && currentX + directions[j][0] < 11 && currentY + directions[j][1] < 11 && currentY + directions[j][1] >= 0)
+			{
+				//cost calc
+				salePrice = map2[currentY ][currentX + directions[j][0]].currCost + map2[currentY + directions[j][1]][currentX + directions[j][0]].cost + (destX - (currentX + directions[j][0])) + (destY - (currentY + directions[j][1]));
+				//is it in closed?
+				for(i = 0; i < closedHead; i++)
+				{
+					if((closed[i][0] == currentX + directions[j][0]) && (currentY + directions[j][1] == closed[i][1]))
+						found = 1;
+				}
+				
+				//is it open?
+				if(!found)
+				{
+					for(i = 0; i < stackHead; i++)
+					{
+						if((stack[i][0] == currentX + directions[j][0]) && (currentY + directions[j][0] == stack[i][1]))
+						{
+							found = 1;
+							//only update if it is an improvement
+							if(map2[stack[i][1]][stack[i][0]].currCost > salePrice)
+							{
+								map2[stack[i][1]][stack[i][0]].currCost = salePrice;
+								map2[stack[i][1]][stack[i][0]].prevX = currentX;
+								map2[stack[i][1]][stack[i][0]].prevY = currentY;
+							}
+						}
+					}
+				}
+				
+				//if it is neither, add it to open
+				if(!found)
+				{
+					map2[currentY + directions[j][1]][currentX + directions[j][0]].currCost = salePrice;
+					map2[currentY + directions[j][1]][currentX + directions[j][0]].prevX = currentX;
+					map2[currentY + directions[j][1]][currentX + directions[j][0]].prevY = currentY;
+					pushStack(currentX + directions[j][0], currentY + directions[j][1]);
+				}
+			}
+		}
+			
+	}//end A* processing
+	
+	//build path
+	currentX = destX;
+	currentY = destY;
+	pathSize = 0;
+	while (! (currentX == cellX && currentY == cellY))
+	{
+		path[pathSize][0] = currentX;
+		path[pathSize][1] = currentY;
+		pathSize++;
+		
+		i = currentX;
+		j = currentY;
+		
+		currentX = map2[i][j].prevX;
+		currentY = map2[i][j].prevY;
+	}
+
+	
+	//...path should now be up to date
+		
+	
+	
+	
+
 	
 }
 
-void initializeNodes()
+//put coords in first availble
+void pushStack(int x, int y)
 {
 	int i = 0;
-	
-	allRooms[0].designation = 0; //hall
-	allRooms[0].alleys[0][0] = 5;
-	allRooms[0].alleys[0][1] = 8;
-	allRooms[0].alleys[1][0] = 3;
-	allRooms[0].alleys[1][0] = 5;
-	
-	allRooms[1].designation = 1; //northeast
-	allRooms[1].alleys[0][0] = 3;
-	allRooms[1].alleys[0][1] = 5;
-	allRooms[1].alleys[1][0] = -1;
-	allRooms[1].alleys[1][1] = -1;
-	
-	allRooms[2].designation = 2; //southeast
-	allRooms[2].alleys[0][0] = 6;
-	allRooms[2].alleys[0][1] = 9;
-	allRooms[2].alleys[1][0] = -1;
-	allRooms[2].alleys[1][1] = -1;
-	
-	allRooms[3].designation = 3; //northwest
-	allRooms[3].alleys[0][0] = 1;
-	allRooms[3].alleys[0][1] = 5;
-	allRooms[3].alleys[1][0] = -1;
-	allRooms[3].alleys[1][1] = -1;
-	
-	allRooms[4].designation = 4; //southwest
-	allRooms[4].alleys[0][0] = 1;
-	allRooms[4].alleys[0][1] = 5;
-	allRooms[4].alleys[1][0] = 4;
-	allRooms[4].alleys[1][1] = 9;
-	
-	
-	//declare neighbors for rooms
-	allRooms[1].neighbor[0] = &(allRooms[0]);
-	for (i = 1; i < 4; i++)
+	for(i = 0; i < 100; i++)
 	{
-		allRooms[1].neighbor[i] = 0;
+		if(stack[i][0] == -1 )
+		{
+			if( i >= stackHead)
+				stackHead ++;
+			stack[i][0] = x;
+			stack[i][1] = y;
+		}
 	}
-	
-	allRooms[2].neighbor[0] = &(allRooms[0]);
-	allRooms[2].neighbor[1] = &(allRooms[4]);
-	for (i = 2; i < 4; i++)
-	{
-		allRooms[2].neighbor[i] = 0;
-	}
-	
-	allRooms[3].neighbor[0] = &(allRooms[4]);
-	for(i = 1; i < 4; i++)
-	{
-		allRooms[3].neighbor[i] = 0;
-	}
-	
-	allRooms[4].neighbor[0] = &(allRooms[3]);
-	allRooms[4].neighbor[1] = &(allRooms[0]);
-	allRooms[4].neighbor[2] = &(allRooms[2]);
-	allRooms[4].neighbor[3] = 0;
 }
+
+void popStack(int x, int y)
+{
+	int i = 0;
+	for(i = 0; i < 100; i++)
+	{
+		if(stack[i][0] == x && stack[i][1] == y)
+		{
+			//stackHead--;
+			stack[i][0] = -1;
+			stack[i][1] = -1;
+		}
+	}
+}
+
+void pushClosed(int x, int y)
+{
+	int i = 0;
+	for(i = 0; i < 80; i++)
+	{
+		if(closed[i][0] == -1)
+		{
+			if (i >= closedHead)
+				closedHead ++;
+			closed[i][0] = x;
+			closed[i][1] = y;
+		}
+	}
+}
+
+void popClosed(int x, int y)
+{
+	int i = 0;
+	for(i = 0; i < 80; i++)
+	{
+		if(closed[i][0] == x && closed[i][1] == y)
+		{
+			//closedHead--;
+			closed[i][0] = -1;
+			closed[i][1] = -1;
+		}
+	}
+}
+		
+
 
 void checkForObstacle(){
 	track_update();
