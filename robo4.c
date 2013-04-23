@@ -28,18 +28,19 @@ const int branch[3][5][2] =
 {{9,2},{7,1},{3,1},{3,2},{-1,-1}}
 };
 
-const float wheelRad = .033f; //meters
-const float axelLength = .153f;
+const float WHEEL_RAD = .033f; //meters
+const float AXEL_LENGTH = .153f;
 const float PI = 3.1415926f;
 
-const float cellSize = .3048f; //meters
+const float CELL_SIZE = .3048f; //meters
 
-const int ticksPerRev = 1100;
+const int TICKS_PER_REV = 1100;
 
 const int SPEED = 300;
 const int MIN_OBJECT_SIZE  = 10;
 const int MIN_OBSTACLE_SIZE = 30;
 const int SCREEN_WIDTH = 159;
+const int SCREEN_HEIGHT= 119;
 
 const int TICK_SHAVE = 0; //subtracts these ticks from rotation, because 
 
@@ -51,12 +52,12 @@ const float ROT_THRESH = .2f;
 void selectRooms();
 void moveTowardFoundObject();
 void missingObjects();
-void Rotate90();
+void Rotate90(int direction);
 void moveSquare();
 void accumulateMoveData();
 void initializeNodes();
 void checkForObstacle();
-
+void moveTowardTargetByGrid();
 
 int targetColor = 1;
 int obstacleColor = 2;
@@ -71,6 +72,8 @@ int objectFound = 0;
 
 int cellX;
 int cellY;
+int targetX;
+int targetY;
 float posX; //meters
 float posY; //meters
 float rot;  //rad
@@ -211,7 +214,7 @@ int main()
 			//if not right facing, resolve now
 			if(facing != goalDir){				
 					printf("%d vs %d", facing, goalDir);
-					Rotate90();					
+					Rotate90(0);					
 			}
 			else
 			moveSquare();
@@ -220,7 +223,7 @@ int main()
 		}
 		else
 		{
-			moveTowardFoundObject();
+			moveTowardTargetByGrid();
 		}
 		
 	}
@@ -264,7 +267,8 @@ void selectRooms(){
 
 
 //rotates to face cell provided
-void Rotate90()
+//0 for left 1 for right
+void Rotate90(int direction)
 {
 	//a 90 degree rotation is 1/4 of a turn of the robot, or the distance of one of the wheels traveling that distance
 	float quarterTurn;
@@ -274,24 +278,38 @@ void Rotate90()
 	
 
 	
-	quarterTurn = .25f * ( PI * axelLength);
-	revs = quarterTurn / (2 * PI * wheelRad);
-	ticksNeeded = ticksPerRev * revs;// -TICK_SHAVE;
+	quarterTurn = .25f * ( PI * AXEL_LENGTH);
+	revs = quarterTurn / (2 * PI * WHEEL_RAD);
+	ticksNeeded = TICKS_PER_REV * revs;// -TICK_SHAVE;
 	
 	//printf("needtorotate %d", ticksNeeded);
-	
-	move_relative_position(0, SPEED, -ticksNeeded);
-	move_relative_position(3, SPEED, ticksNeeded);
-	
-	while((get_motor_done(0)==0))
+	if( direction == 0)
 	{
-		sleep(.5);
+		move_relative_position(0, SPEED, -ticksNeeded);
+		move_relative_position(3, SPEED, ticksNeeded);
+		
+		while((get_motor_done(0)==0))
+		{
+			sleep(.5);
+		}
+		facing++;
+		if(facing > 3)	
+			facing = 0;	
 	}
-	facing++;
-	if(facing > 3)	
-		facing = 0;	
-	
-	
+	else
+	{
+		move_relative_position(0, SPEED, ticksNeeded);
+		move_relative_position(3, SPEED, -ticksNeeded);
+		
+		while((get_motor_done(0)==0))
+		{
+			sleep(.5);
+		}
+		facing--;
+		if(facing < 0)	
+			facing = 3;	
+	}
+		
 }
 
 void moveSquare()
@@ -299,8 +317,8 @@ void moveSquare()
 	float revs;
 	int ticksNeeded;
 	
-	revs = cellSize / (2 * PI * wheelRad);
-	ticksNeeded = ticksPerRev * revs;
+	revs = CELL_SIZE / (2 * PI * WHEEL_RAD);
+	ticksNeeded = TICKS_PER_REV * revs;
 	
 	move_relative_position(0, SPEED, ticksNeeded);
 	move_relative_position(3, SPEED, ticksNeeded);
@@ -340,8 +358,14 @@ void moveTowardFoundObject(){
 		y = track_y(targetColor,0);	
 		if(x <= (SCREEN_WIDTH/2) - SCREEN_WIDTH/12){
 				//printf("Biggest blob is left\n");
+			//go until reasonably in the middle
+			while(x<= (SCREEN_WIDTH/2) - SCREEN_WIDTH/24){
 				mav(0,-SPEED/3);
 				mav(3,SPEED/3);
+				track_update();
+					x = track_x(targetColor,0); 
+			}
+			ao();
 		}
 		else if(x <= (SCREEN_WIDTH/2) + SCREEN_WIDTH/12){
 			ETsensorData = analog10(2);
@@ -355,14 +379,19 @@ void moveTowardFoundObject(){
 				}
 			}
 			else{
-				mav(0,-SPEED);
-				mav(3,-SPEED);
+				mav(0,-SPEED/3);
+				mav(3,-SPEED/3);
 			}
 		}
 		else{
 		//	printf("Biggest blob is right\n");
-			mav(0,SPEED/3);
-			mav(3,-SPEED/3);
+			while(x>= (SCREEN_WIDTH/2) + SCREEN_WIDTH/24){
+				mav(0,SPEED/3);
+				mav(3,-SPEED/3);
+				track_update();
+				x = track_x(targetColor,0); 
+				}
+				ao();
 		}
 	}
 	else{
@@ -387,7 +416,7 @@ void setPath()
 	//currentRoom
 	//targetRoom
 	
-	struct room *roomStart = &(allRooms[currentRoom]);
+/*	struct room *roomStart = &(allRooms[currentRoom]);
 	struct room *roomEnd = &(allRooms[targetRoom]);
 	
 	int now = currentRoom;
@@ -408,7 +437,7 @@ void setPath()
 		{
 		}
 	}
-	
+	*/
 	
 }
 
@@ -488,7 +517,7 @@ void checkForObstacle(){
 			if(x >= (SCREEN_WIDTH/2) - SCREEN_WIDTH/3 && x <= (SCREEN_WIDTH/2) + SCREEN_WIDTH/3){
 				ETsensorData = analog10(2);
 			//	printf("Biggest blob is center\n %d",ETsensorData);
-				//if(ETsensorData < 550 && ETsensorData > 300 ){
+				if(ETsensorData < 550 && ETsensorData > 300 ){
 					switch(facing){
 						case 0:
 							if(cellY > 0){
@@ -516,7 +545,7 @@ void checkForObstacle(){
 							break;
 					}
 					
-				//}
+				}
 			}
 			else{
 				//printf("Not in middle\n");
@@ -530,3 +559,81 @@ void checkForObstacle(){
 	}
 }
 
+void moveTowardTargetByGrid(){
+	int x;
+	int y;
+	track_update();
+	int size = track_size(targetColor,0);
+	int ETsensorData = 0;
+	//0 left, 1 center, 2 right;
+	int turn = 1;
+	while(1){
+	if (track_count(targetColor) > 0 && size >= MIN_OBJECT_SIZE){
+			if(!objectFound){
+				objectFound = 1 - objectFound;
+				beep();
+			}
+		x = track_x(targetColor,0); 
+		y = track_y(targetColor,0);	
+		if(y >= SCREEN_HEIGHT /2){
+			switch(facing){
+				case 0:							
+					targetY = cellY-1;
+					targetX = cellX;				
+					break;
+				case 1:
+					targetY = cellY;
+					targetX = cellX-1;
+					break;
+				case 2:
+					targetY = cellY+1;
+					targetX = cellX;
+					break;
+				case 3:
+					targetY = cellY;
+					targetX = cellX+1;
+					break;
+			}
+			ao();
+			return;
+		}
+		else
+		if(x <= (SCREEN_WIDTH/2) - SCREEN_WIDTH/6){
+				turn = 0;
+				
+		}
+		else if(x <= (SCREEN_WIDTH/2) + SCREEN_WIDTH/6){
+			turn = 1;
+			
+		}
+		else{
+			turn = 2;
+		}
+		moveSquare();
+		if( turn == 0){
+			Rotate90(0);
+			track_update();
+			 size = track_size(targetColor,0);
+			if (track_count(targetColor) > 0 && size >= MIN_OBJECT_SIZE)
+				continue;
+			else{
+				moveSquare();
+				Rotate90(1);
+			}
+		}
+		else if( turn == 2){
+			Rotate90(1);
+			track_update();
+			 size = track_size(targetColor,0);
+			if (track_count(targetColor) > 0 && size >= MIN_OBJECT_SIZE)
+				continue;
+			else{
+				moveSquare();
+				Rotate90(0);
+			}
+			
+		}
+		
+	}
+	}
+}
