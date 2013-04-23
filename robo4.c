@@ -209,14 +209,9 @@ int main()
 				}
 			}	
 			//if not right facing, resolve now
-			if(facing != goalDir){
-				while(facing != goalDir)
-				{	
+			if(facing != goalDir){				
 					printf("%d vs %d", facing, goalDir);
-					Rotate90();	
-					
-					
-				}
+					Rotate90();					
 			}
 			else
 			moveSquare();
