@@ -382,6 +382,35 @@ void missingObjects()
     }
 }
 
+void setPath()
+{
+	//currentRoom
+	//targetRoom
+	
+	struct room *roomStart = &(allRooms[currentRoom]);
+	struct room *roomEnd = &(allRooms[targetRoom]);
+	
+	int now = currentRoom;
+	int roomSearched[5];
+	int path[4];
+	int i = 0;	
+	int check = 0;
+	
+	for (i = 0; i < 5; i++)
+	{
+		roomSearched[i] = 0;
+	}
+	
+	while ( now != roomEnd)
+	{
+		//find the first unsearched neighbor
+		for(i = 0; i < 4; i++)
+		{
+		}
+	}
+	
+	
+}
 
 void initializeNodes()
 {
