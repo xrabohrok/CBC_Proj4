@@ -27,11 +27,16 @@ int map[11][11] =
  //x,y
 int dests[5][2] = {
 	{-1,-1},
-	{8,2},
-	{8,8},
-	{2,2},
-	{2,8}};
- 
+	{7,4},
+	{7,6},
+	{3,1},
+	{3,6}};
+ int secondaryDests[5][2] = {
+	{-1,-1},
+	{9,4},
+	{9,6},
+	{3,4},
+	{1,9}};
 
 
 const float WHEEL_RAD = .033f; //meters
@@ -43,7 +48,7 @@ const float CELL_SIZE = .3048f; //meters
 const int TICKS_PER_REV = 1100;
 
 const int SPEED = 300;
-const int MIN_OBJECT_SIZE  = 10;
+const int MIN_OBJECT_SIZE  = 20;
 const int MIN_OBSTACLE_SIZE = 30;
 const int SCREEN_WIDTH = 159;
 const int SCREEN_HEIGHT= 119;
@@ -78,13 +83,15 @@ int obstacleColor = 2;
 int currentRoom = 1;
 int targetRoom  = 1;
 int facing = 0; //where 0 is facing down the hallway(negative) and advances ccw to 3
-
+int useSecondary = 0;
 int pathSize = 0;
 int stackHead = 0;
 int closedHead = 0;
 int stack[100][2];
 int closed[80][2];
 int path[30][2];
+
+int backTrack = 0;
 
 int color = 0;
 int objectFound = 0;
@@ -97,7 +104,7 @@ int targetY;
 float posX; //meters
 float posY; //meters
 float rot;  //rad
-
+int link; //of nodes of chain
 
 
 struct cell{
@@ -117,9 +124,9 @@ int main()
 	
 	int goal = 0; //to 2
 	int goalDir = 0;
-	int link = 0; //of nodes of chain
 	
 	
+	link = 0;
 	int triggered = 0;
 	
 	
@@ -152,8 +159,29 @@ int main()
 			if(path[link][1] == cellY && path[link][0] == cellX )
 			{
 				//advance goal chain
-				link--;	
+				if(backTrack == 0)
+				{
+					link--;
+					//reached the end
+					if(link < 0)
+					{
+						link = 0;
+						backTrack = 1;
+					}
+				}
+				else if(backTrack == 1)
+				{
+					link++;
+					if(link > 4)
+					{
+						link = 4;
+						backTrack = 0;
+					}
+				}
 				//overlimit	
+				
+				//the goal itself is blocked
+				
 
 				printf("\nnew Destination: %d, %d\n", path[link][0], path[link][1]);
 			}
@@ -243,7 +271,7 @@ int main()
 	return 0;
 }
 
-
+//used to select starting and target room.  Also askes which starting position to use
 void selectRooms(){
 	int randomBool = 0;
 	printf("Press A button to cycle\n");
@@ -280,13 +308,37 @@ void selectRooms(){
 		}
 		
 	}
+	printf("Press A button to cycle\n");
+	printf("Press B button to select\n");
+	printf("Use Secondary? No.\n");
+	while(!b_button()){
+		if(a_button()){
+			randomBool = 1;
+		}
+		else if(randomBool ==1)
+		{
+			randomBool  = 0;
+			useSecondary = 1 - useSecondary;
+			if(useSecondary == 1)
+				printf("Yes\n");
+			else
+				printf("No\n");
+			
+		}
+		
+	}
+	
 	printf("Hit A button to start search\n");
 	while(!a_button());
 	sleep(2.0);
-	
+	if( useSecondary == 0){
 	cellX = dests[currentRoom][0];
 	cellY = dests[currentRoom][1];
-	
+	}
+	else{
+		cellX = secondaryDests[currentRoom][0];
+		cellY = secondaryDests[currentRoom][1];
+	}
 	printf("selected %d start to %d end\n", currentRoom, targetRoom);
 	//now that we know our destination and start, we can figure out a path
 	
@@ -369,7 +421,7 @@ void evasiveManuver(int ticks)
 {
 	static int ticksSoFar;
 }
-
+// not currently used.
 void moveTowardFoundObject(){
 	int x;
 	int y;
@@ -698,7 +750,7 @@ void popClosed(int x, int y)
 }
 		
 
-
+//checks for an onstackle and if still on the path will update map.
 int checkForObstacle(int onPath){
 	track_update();
 	int size[10];
@@ -743,8 +795,22 @@ int checkForObstacle(int onPath){
 							
 					}
 					ao();
-					if(onPath == 1)
-						setPath();
+					if(onPath == 1){
+						if(map[dests[targetRoom][1]][dests[targetRoom][0]] != 0)
+						{
+							//use secondary instead
+							printf("Plan B \n");
+							dests[targetRoom][0] = secondaryDests[targetRoom][0];
+							dests[targetRoom][1] = secondaryDests[targetRoom][1];
+							
+							setPath();
+							link = pathSize -1;
+						}
+						else
+							setPath();
+						
+					}
+						
 					return 1;
 				}
 			}
@@ -760,7 +826,7 @@ int checkForObstacle(int onPath){
 	}
 	return 0;
 }
-
+//manhatten its way toward a target
 void moveTowardTargetByGrid(){
 	int x;
 	int y;
