@@ -459,13 +459,13 @@ void setPath()
 		{
 			map2[i][j].x = i;
 			map2[i][j].y = j;
-			map2[i][j].currCost = 100000000;
+			map2[i][j].currCost = -1;
 			map2[i][j].prevX = -1;
 			map2[i][j].prevY = -1;
 			
 			if (map[i][j] > 0 )
 			{
-				map2[i][j].cost = 1000;
+				map2[i][j].cost = 100000;
 			}
 			else
 			{
@@ -536,6 +536,8 @@ void setPath()
 				//cost calc
 				salePrice = map2[currentY ][currentX + directions[j][0]].currCost + map2[currentY + directions[j][1]][currentX + directions[j][0]].cost + (destX - (currentX + directions[j][0])) + (destY - (currentY + directions[j][1]));
 				//is it in closed?
+				
+				printf(" cost: %d\n", salePrice);
 				for(i = 0; i < closedHead; i++)
 				{
 					if((closed[i][0] == currentX + directions[j][0]) && (currentY + directions[j][1] == closed[i][1]))
