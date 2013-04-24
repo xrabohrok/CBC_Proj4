@@ -465,7 +465,7 @@ void setPath()
 			
 			if (map[i][j] > 0 )
 			{
-				map2[i][j].cost = 100000;
+				map2[i][j].cost = 10000000;
 			}
 			else
 			{
@@ -553,7 +553,7 @@ void setPath()
 						{
 							found = 1;
 							//only update if it is an improvement
-							if(map2[stack[i][1]][stack[i][0]].currCost > salePrice)
+							if(map2[stack[i][1]][stack[i][0]].currCost > salePrice || map2[stack[i][1]][stack[i][0]].currCost == -1)
 							{
 								map2[stack[i][1]][stack[i][0]].currCost = salePrice;
 								map2[stack[i][1]][stack[i][0]].prevX = currentX;
