@@ -506,8 +506,11 @@ void setPath()
 	{
 		printf("\t proc %d, %d\n", currentX, currentY);
 		//find cheapest node
-		lowCost = 1000000;
-		for(i = 0; i < stackHead; i++)
+		j = 0;
+		while (stack[j][0] == -1)
+			j++;
+		lowCost = map2[stack[j][1]][stack[j][0]].currCost;
+		for(i = j+1; i < stackHead; i++)
 		{
 			if( map2[stack[i][1]][stack[i][0]].currCost < lowCost)
 			{
