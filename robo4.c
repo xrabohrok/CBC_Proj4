@@ -61,7 +61,7 @@ void missingObjects();
 void Rotate90(int direction);
 void moveSquare();
 void accumulateMoveData();
-void checkForObstacle();
+int checkForObstacle(int onPath);
 void moveTowardTargetByGrid();
 
 
@@ -160,7 +160,7 @@ int main()
 			//am I facing goal?	
 			//needs to be...(x resolved first, unless map says no)
 			printf("\t\t%d, %d\n", cellY, cellX);
-			checkForObstacle();
+			checkForObstacle(1);
 			goalDir = -1;
 			int horiz = 0;
 			int vert = 0;
@@ -699,7 +699,7 @@ void popClosed(int x, int y)
 		
 
 
-void checkForObstacle(){
+int checkForObstacle(int onPath){
 	track_update();
 	int size[10];
 	int i;
@@ -743,7 +743,9 @@ void checkForObstacle(){
 							
 					}
 					ao();
-					setPath();
+					if(onPath == 1)
+						setPath();
+					return 1;
 				}
 			}
 			else{
@@ -756,6 +758,7 @@ void checkForObstacle(){
 		}
 		
 	}
+	return 0;
 }
 
 void moveTowardTargetByGrid(){
@@ -763,7 +766,9 @@ void moveTowardTargetByGrid(){
 	int y;
 	
 	int size;
+	int obstacle = 0;
 	//0 left, 1 center, 2 right;
+	//-1 special right 3 special left
 	int turn = 1;
 	while(1){
 	track_update();
@@ -773,13 +778,34 @@ void moveTowardTargetByGrid(){
 				objectFound = 1 - objectFound;
 				beep();
 			}
-		printf("Starting Loop\n");
+	}
+	else{
+	//	printf("turn: %d\n",turn);
+		if(turn == 0){
+			Rotate90(0);
+			turn =-1;
+		}
+		else if(turn == 2)
+		{
+			Rotate90(1);
+			turn =3;
+		}
+		else{
+			moveSquare();
+			if( turn == 3)
+				Rotate90(0);
+			else if(turn == -1)
+				Rotate90(1);
+		}
+		continue;
+	}
+		//printf("Starting Loop\n");
 		x = track_x(targetColor,0); 
 		y = track_y(targetColor,0);	
-		printf("x: %d, y: %d ",x,y);
+		//printf("x: %d, y: %d ",x,y);
 
 		if(y >= SCREEN_HEIGHT /2){
-			printf("Done\n");
+		//	printf("Done\n");
 			switch(facing){
 				case 0:							
 					targetY = cellY-1;
@@ -802,48 +828,67 @@ void moveTowardTargetByGrid(){
 			printf("Robot Position (world): %d, %d\n",cellX,cellY);
 			printf("Target Position (robot): 1, 0\n");
 			printf("Target Position (world): %d, %d\n",targetX,targetY);
+			exit(1);
 			return;
 		}
 		else
-			
-		if(x <= (SCREEN_WIDTH/2) - SCREEN_WIDTH/6){
-				turn = 0;
-					printf("Left\n");
-		}
-		else if(x <= (SCREEN_WIDTH/2) + SCREEN_WIDTH/6){
-			turn = 1;
-			printf("Center\n");
-		}
-		else{
-			turn = 2;
-			printf("Right\n");
-		}
-		moveSquare();
-		if( turn == 0){
-			Rotate90(0);
-			track_update();
-			 size = track_size(targetColor,0);
-			if (track_count(targetColor) > 0 && size >= MIN_OBJECT_SIZE)
-				continue;
-			else{
-				moveSquare();
-				Rotate90(1);
+		{	
+			if(x <= (SCREEN_WIDTH/2) - SCREEN_WIDTH/6){
+					turn = 0;
+						printf("Left\n");
 			}
-		}
-		else if( turn == 2){
-			Rotate90(1);
-			track_update();
-			 size = track_size(targetColor,0);
-			if (track_count(targetColor) > 0 && size >= MIN_OBJECT_SIZE)
-				continue;
+			else if(x <= (SCREEN_WIDTH/2) + SCREEN_WIDTH/6){
+				turn = 1;
+		//		printf("Center\n");
+			}
 			else{
-				moveSquare();
+				turn = 2;
+			//	printf("Right\n");
+			}
+			moveSquare();
+			if( turn == 0)
+			{
+				
 				Rotate90(0);
+				obstacle = checkForObstacle(0);
+				if(obstacle == 0){
+					track_update();
+					 size = track_size(targetColor,0);
+					if (track_count(targetColor) > 0 && size >= MIN_OBJECT_SIZE)
+						continue;
+					else{
+						moveSquare();
+						Rotate90(1);
+					}
+				}
+				else{
+					Rotate90(1);
+					moveSquare();
+				}
 			}
-			
-		}
-		printf("Ending Loop\n");
+			else if( turn == 2)
+			{
+				
+				Rotate90(1);
+				obstacle = checkForObstacle(0);
+				if(obstacle == 0){
+					track_update();
+					 size = track_size(targetColor,0);
+					if (track_count(targetColor) > 0 && size >= MIN_OBJECT_SIZE)
+						continue;
+					else{
+						moveSquare();
+						Rotate90(0);
+					}
+				}
+				else{
+					Rotate90(0);
+					moveSquare();
+				}
+				
+			}
+		//	printf("Ending Loop\n");
 		
-	}
+		}
 	}
 }
