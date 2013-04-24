@@ -5,7 +5,9 @@
 //1 orange
 //2 green
 
-//define map here
+#include <math.h>
+
+//define map here..
 int map[11][11] = 
 {{2,2,2,2,2,2,2,2,2,2,2}, //0
  {2,0,0,0,2,0,0,0,0,0,2}, //1
@@ -75,7 +77,6 @@ int targetColor = 1;
 int obstacleColor = 2;
 int currentRoom = 1;
 int targetRoom  = 1;
-int direction = 1; //1 = forward, -1 = backward
 int facing = 0; //where 0 is facing down the hallway(negative) and advances ccw to 3
 
 int pathSize = 0;
@@ -147,13 +148,13 @@ int main()
 		}
 		if(triggered == 0)
 		{
-			if(path[link][0] == cellY && path[link][1] == cellX )
+			if(path[link][1] == cellY && path[link][0] == cellX )
 			{
 				//advance goal chain
-				link -= direction;	
+				link--;	
 				//overlimit	
 
-				printf("new Destination: %d, %d\n", path[link][0], path[link][1]);
+				printf("\nnew Destination: %d, %d\n", path[link][0], path[link][1]);
 			}
 			//am I facing goal?	
 			//needs to be...(x resolved first, unless map says no)
@@ -164,7 +165,7 @@ int main()
 			int vert = 0;
 			while (goalDir ==-1)
 			{
-				if((vert == 1 || cellX > path[link][1]) && map[cellY][cellX-1] == 0)
+				if((vert == 1 || cellX > path[link][0]) && map[cellY][cellX-1] == 0)
 				{
 					goalDir = 1;
 					printf("west\n");
@@ -177,40 +178,40 @@ int main()
 					}
 				}
 				
-				if((vert == 1 || cellX < path[link][1]) && map[cellY][cellX+1] == 0)
+				if((vert == 1 || cellX < path[link][0]) && map[cellY][cellX+1] == 0)
 				{
 					goalDir = 3;	
 					printf("east\n");	
 				}
 				else
 				{
-					if(cellX < path[link][1])
+					if(cellX < path[link][0])
 					{
 						horiz = 1;
 					}
 				}
 				
-				if((horiz == 1 || cellY > path[link][0]) && map[cellY-1][cellX] == 0)
+				if((horiz == 1 || cellY > path[link][1]) && map[cellY-1][cellX] == 0)
 				{	
 					goalDir = 0;
 					printf("north\n");	
 				}
 				else
 				{
-					if(cellY > path[link][0])
+					if(cellY > path[link][1])
 					{
 						vert = 1;
 					}
 				}
 				
-				if((horiz == 1 || cellY < path[link][0]) && map[cellY+1][cellX] == 0)
+				if((horiz == 1 || cellY < path[link][1]) && map[cellY+1][cellX] == 0)
 				{	
 					goalDir = 2;	
 					printf("south\n");
 				}
 				else
 				{
-					if(cellY < path[link][0])
+					if(cellY < path[link][1])
 					{
 						vert = 1;
 					}
@@ -529,7 +530,7 @@ void setPath()
 		lowCost = map2[stack[j][1]][stack[j][0]].currCost;
 		focus = j;
 		printf("j+1: %d, stackHead: %d\n",j+1,stackHead);
-		for(i = j+1; i < stackHead; i++)
+		for(i = 0; i < stackHead; i++)
 		{
 			if( map2[stack[i][1]][stack[i][0]].currCost < lowCost && stack[i][0] != -1)
 			{
@@ -556,7 +557,7 @@ void setPath()
 			if(currentX + directions[j][0] >= 0 && currentX + directions[j][0] < 11 && currentY + directions[j][1] < 11 && currentY + directions[j][1] >= 0)
 			{
 				//cost calc
-				salePrice = map2[currentY ][currentX ].currCost + map2[currentY + directions[j][1]][currentX + directions[j][0]].cost + (destX - (currentX + directions[j][0])) + (destY - (currentY + directions[j][1]));
+				salePrice = map2[currentY ][currentX ].currCost + map2[currentY + directions[j][1]][currentX + directions[j][0]].cost + abs(destX - (currentX + directions[j][0])) + abs(destY - (currentY + directions[j][1]));
 				//is it in closed?
 				
 				printf(" cost: %d\n", salePrice);
