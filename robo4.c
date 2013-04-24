@@ -274,6 +274,7 @@ void selectRooms(){
 	cellX = dests[currentRoom][0];
 	cellY = dests[currentRoom][1];
 	
+	printf("selected %d start to %d end\n", currentRoom, targetRoom);
 	//now that we know our destination and start, we can figure out a path
 	
 }
@@ -497,6 +498,7 @@ void setPath()
 	//end initialization
 	pushStack(currentX, currentY);
 	
+	printf("from %d, %d to %d, %d", currentX, currentY, destX, destY);
 	//begin A*
 	while(currentX != destX || currentY != destY)
 	{
@@ -535,7 +537,7 @@ void setPath()
 				}
 				
 				//is it open?
-				if(!found)
+				if(found == 0)
 				{
 					for(i = 0; i < stackHead; i++)
 					{
@@ -554,7 +556,7 @@ void setPath()
 				}
 				
 				//if it is neither, add it to open
-				if(!found)
+				if(found == 0)
 				{
 					map2[currentY + directions[j][1]][currentX + directions[j][0]].currCost = salePrice;
 					map2[currentY + directions[j][1]][currentX + directions[j][0]].prevX = currentX;
