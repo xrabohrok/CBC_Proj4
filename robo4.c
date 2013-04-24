@@ -223,7 +223,7 @@ int main()
 					printf("%d vs %d", facing, goalDir);
 					if((facing + 1)%4 == goalDir%4)
 					Rotate90(0);
-					else if((facing - 1)%4 == goalDir%4)
+					else if((facing - 1 + 4)%4 == goalDir%4)
 					Rotate90(1);
 					else
 					Rotate90(0);	
