@@ -512,7 +512,7 @@ void setPath()
 		lowCost = map2[stack[j][1]][stack[j][0]].currCost;
 		for(i = j+1; i < stackHead; i++)
 		{
-			if( map2[stack[i][1]][stack[i][0]].currCost < lowCost)
+			if( map2[stack[i][1]][stack[i][0]].currCost < lowCost && stack[i][0] != -1)
 			{
 				focus = i;
 			}
