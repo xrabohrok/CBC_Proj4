@@ -534,7 +534,7 @@ void setPath()
 			if(currentX + directions[j][0] >= 0 && currentX + directions[j][0] < 11 && currentY + directions[j][1] < 11 && currentY + directions[j][1] >= 0)
 			{
 				//cost calc
-				salePrice = map2[currentY ][currentX + directions[j][0]].currCost + map2[currentY + directions[j][1]][currentX + directions[j][0]].cost + (destX - (currentX + directions[j][0])) + (destY - (currentY + directions[j][1]));
+				salePrice = map2[currentY + directions[j][1] ][currentX + directions[j][0]].currCost + map2[currentY + directions[j][1]][currentX + directions[j][0]].cost + (destX - (currentX + directions[j][0])) + (destY - (currentY + directions[j][1]));
 				//is it in closed?
 				
 				printf(" cost: %d\n", salePrice);
