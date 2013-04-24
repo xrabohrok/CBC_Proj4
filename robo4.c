@@ -577,9 +577,9 @@ void setPath()
 							//only update if it is an improvement
 							if(map2[stack[i][1]][stack[i][0]].currCost > salePrice || map2[stack[i][1]][stack[i][0]].currCost == -1)
 							{
-								map2[stack[i][1]][stack[i][0]].currCost = salePrice;
-								map2[stack[i][1]][stack[i][0]].prevX = currentX;
-								map2[stack[i][1]][stack[i][0]].prevY = currentY;
+								map2[currentY + directions[j][1]][currentX + directions[j][0]].currCost = salePrice;
+								map2[currentY + directions[j][1]][currentX + directions[j][0]].prevX = currentX;
+								map2[currentY + directions[j][1]][currentX + directions[j][0]].prevY = currentY;
 							}
 						}
 					}
@@ -604,7 +604,7 @@ void setPath()
 	currentX = destX;
 	currentY = destY;
 	pathSize = 0;
-	while (! (currentX == cellX && currentY == cellY))
+	while (currentX != cellX || currentY != cellY && pathSize < 30)
 	{
 		
 		printf("p(%d , %d)\n", currentX, currentY);
@@ -615,8 +615,8 @@ void setPath()
 		i = currentX;
 		j = currentY;
 		
-		currentX = map2[i][j].prevX;
-		currentY = map2[i][j].prevY;
+		currentX = map2[j][i].prevX;
+		currentY = map2[j][i].prevY;
 	}
 
 	
