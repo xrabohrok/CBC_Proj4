@@ -128,8 +128,6 @@ int main()
 	posX = 0;
 	posY = 0;
 	rot = 1.5f * PI;
-	cellX = 5;
-	cellY = 9;
 	
 	set_each_analog_state(1,1,1,0,0,0,0,0);
 	selectRooms();
@@ -434,6 +432,7 @@ void setPath()
 
 	//initizlize A* stuff
 	struct cell map2[11][11];
+	int count = 0;
 	int i = 0;
 	int j = 0;
 	int currentX = 0;
@@ -564,8 +563,10 @@ void setPath()
 				}
 			}
 		}
+		count++;
 			
 	}//end A* processing
+	printf("A* done\n");
 	
 	//build path
 	currentX = destX;
@@ -574,7 +575,7 @@ void setPath()
 	while (! (currentX == cellX && currentY == cellY))
 	{
 		
-		printf("(%d , %d)\n", currentX, currentY);
+		printf("p(%d , %d)\n", currentX, currentY);
 		path[pathSize][0] = currentX;
 		path[pathSize][1] = currentY;
 		pathSize++;
@@ -751,7 +752,7 @@ void moveTowardTargetByGrid(){
 			ao();
 			printf("Robot Position (world): %d, %d\n",cellX,cellY);
 			printf("Target Position (robot): 1, 0\n");
-			printf("Target Position (world: %d, %d\n",targetX,targetY);
+			printf("Target Position (world): %d, %d\n",targetX,targetY);
 			return;
 		}
 		else
