@@ -498,10 +498,13 @@ void setPath()
 	//end initialization
 	pushStack(currentX, currentY);
 	
-	printf("from %d, %d to %d, %d", currentX, currentY, destX, destY);
+	map2[currentY][currentX].currCost = 1;
+	
+	printf("from %d, %d to %d, %d\n", currentX, currentY, destX, destY);
 	//begin A*
 	while(currentX != destX || currentY != destY)
 	{
+		printf("\t proc %d, %d\n", currentX, currentY);
 		//find cheapest node
 		lowCost = 1000000;
 		for(i = 0; i < stackHead; i++)
