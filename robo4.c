@@ -243,15 +243,21 @@ int main()
 
 
 void selectRooms(){
+	int randomBool = 0;
 	printf("Press A button to cycle\n");
 	printf("Press B button to select\n");
 	printf("Starting Room %d\n",currentRoom);
 	while(!b_button()){
 		if(a_button()){
+			randomBool = 1;
+		}
+		else if(randomBool == 1){
+			randomBool = 0;
 			currentRoom++;
 			if(currentRoom > 4)
 				currentRoom = 1;
 			printf("Starting Room %d\n",currentRoom);
+
 		}
 		
 	}
@@ -260,6 +266,11 @@ void selectRooms(){
 	printf("Target Room %d\n",targetRoom);
 	while(!b_button()){
 		if(a_button()){
+			randomBool = 1;
+		}
+		else if(randomBool ==1)
+		{
+			randomBool  =0;
 			targetRoom++;
 			if(targetRoom > 4)
 				targetRoom = 1;
@@ -475,6 +486,12 @@ void setPath()
 	}	
 
 	
+	for(i = 0; i < 80; i++)
+	{
+		closed[i][0] = -1;
+		closed[i][1] = -1;
+	}
+	
 	for(i = 0; i < 100; i++)
 	{
 		stack[i][0] = -1;
@@ -501,20 +518,24 @@ void setPath()
 	map2[currentY][currentX].currCost = 1;
 	
 	printf("from %d, %d to %d, %d\n", currentX, currentY, destX, destY);
-	//begin A*
+	//begin A*.
 	while(currentX != destX || currentY != destY)
 	{
 		printf("\t proc %d, %d\n", currentX, currentY);
 		//find cheapest node
 		j = 0;
-		while (stack[j][0] == -1)
+		while (stack[j][0] == -1 && j < stackHead)
 			j++;
 		lowCost = map2[stack[j][1]][stack[j][0]].currCost;
+		focus = j;
+		printf("j+1: %d, stackHead: %d\n",j+1,stackHead);
 		for(i = j+1; i < stackHead; i++)
 		{
 			if( map2[stack[i][1]][stack[i][0]].currCost < lowCost && stack[i][0] != -1)
 			{
+				printf("lowcost: %d, currCost: %d\n", lowCost, map2[stack[i][1]][stack[i][0]].currCost); 
 				focus = i;
+				lowCost = map2[stack[i][1]][stack[i][0]].currCost;
 			}
 		}
 		
@@ -527,14 +548,15 @@ void setPath()
 		
 		//add all unadded neighbors to the set
 		//left
-		found = 0;
+		
 		for(j = 0; j < 4; j++)
 		{
+			found = 0;
 			//bounds check
 			if(currentX + directions[j][0] >= 0 && currentX + directions[j][0] < 11 && currentY + directions[j][1] < 11 && currentY + directions[j][1] >= 0)
 			{
 				//cost calc
-				salePrice = map2[currentY + directions[j][1] ][currentX + directions[j][0]].currCost + map2[currentY + directions[j][1]][currentX + directions[j][0]].cost + (destX - (currentX + directions[j][0])) + (destY - (currentY + directions[j][1]));
+				salePrice = map2[currentY ][currentX ].currCost + map2[currentY + directions[j][1]][currentX + directions[j][0]].cost + (destX - (currentX + directions[j][0])) + (destY - (currentY + directions[j][1]));
 				//is it in closed?
 				
 				printf(" cost: %d\n", salePrice);
@@ -619,6 +641,7 @@ void pushStack(int x, int y)
 				stackHead ++;
 			stack[i][0] = x;
 			stack[i][1] = y;
+			break;
 		}
 	}
 }
@@ -648,6 +671,7 @@ void pushClosed(int x, int y)
 				closedHead ++;
 			closed[i][0] = x;
 			closed[i][1] = y;
+			break;
 		}
 	}
 }
