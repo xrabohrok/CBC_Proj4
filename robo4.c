@@ -22,7 +22,7 @@ int map[11][11] =
  {2,2,2,2,2,2,2,2,2,2,2}}; //10
 //0,1,2,3,4,5,6,7,8,9,10
 //define goal nodes here
-//branch-node-coords
+//branch-node-coords.
  
  //x,y
 int dests[5][2] = {
@@ -133,7 +133,7 @@ int main()
 	set_each_analog_state(1,1,1,0,0,0,0,0);
 	selectRooms();
 	setPath();
-	link = pathSize;
+	link = pathSize -1;
     //main loop
     while(1)    
 	{ 
@@ -148,6 +148,7 @@ int main()
 		}
 		if(triggered == 0)
 		{
+			printf("Testing %d, %d, %d, %d\n",path[link][1],cellY,path[link][0],cellX);
 			if(path[link][1] == cellY && path[link][0] == cellX )
 			{
 				//advance goal chain
@@ -172,7 +173,7 @@ int main()
 				}	
 				else
 				{
-					if(cellX > path[link][1])
+					if(cellX > path[link][0])
 					{
 						horiz = 1;
 					}
@@ -592,7 +593,10 @@ void setPath()
 					map2[currentY + directions[j][1]][currentX + directions[j][0]].currCost = salePrice;
 					map2[currentY + directions[j][1]][currentX + directions[j][0]].prevX = currentX;
 					map2[currentY + directions[j][1]][currentX + directions[j][0]].prevY = currentY;
-					pushStack(currentX + directions[j][0], currentY + directions[j][1]);
+					if(map[currentY + directions[j][1]][currentX + directions[j][0]] == 0){
+						pushStack(currentX + directions[j][0], currentY + directions[j][1]);
+						printf("pushed\n");
+					}
 				}
 			}
 		}
@@ -657,6 +661,7 @@ void popStack(int x, int y)
 			//stackHead--;
 			stack[i][0] = -1;
 			stack[i][1] = -1;
+			break;
 		}
 	}
 }
@@ -687,6 +692,7 @@ void popClosed(int x, int y)
 			//closedHead--;
 			closed[i][0] = -1;
 			closed[i][1] = -1;
+			break;
 		}
 	}
 }
@@ -734,8 +740,10 @@ void checkForObstacle(){
 								printf("Obstacle Detected y:%d x:%d\n",cellY,cellX+1);
 							}
 							break;
+							
 					}
-					
+					ao();
+					setPath();
 				}
 			}
 			else{
@@ -753,19 +761,25 @@ void checkForObstacle(){
 void moveTowardTargetByGrid(){
 	int x;
 	int y;
-	track_update();
-	int size = track_size(targetColor,0);
+	
+	int size;
 	//0 left, 1 center, 2 right;
 	int turn = 1;
 	while(1){
+	track_update();
+	size = track_size(targetColor,0);
 	if (track_count(targetColor) > 0 && size >= MIN_OBJECT_SIZE){
 			if(!objectFound){
 				objectFound = 1 - objectFound;
 				beep();
 			}
+		printf("Starting Loop\n");
 		x = track_x(targetColor,0); 
 		y = track_y(targetColor,0);	
+		printf("x: %d, y: %d ",x,y);
+
 		if(y >= SCREEN_HEIGHT /2){
+			printf("Done\n");
 			switch(facing){
 				case 0:							
 					targetY = cellY-1;
@@ -791,16 +805,18 @@ void moveTowardTargetByGrid(){
 			return;
 		}
 		else
+			
 		if(x <= (SCREEN_WIDTH/2) - SCREEN_WIDTH/6){
 				turn = 0;
-				
+					printf("Left\n");
 		}
 		else if(x <= (SCREEN_WIDTH/2) + SCREEN_WIDTH/6){
 			turn = 1;
-			
+			printf("Center\n");
 		}
 		else{
 			turn = 2;
+			printf("Right\n");
 		}
 		moveSquare();
 		if( turn == 0){
@@ -826,6 +842,7 @@ void moveTowardTargetByGrid(){
 			}
 			
 		}
+		printf("Ending Loop\n");
 		
 	}
 	}
