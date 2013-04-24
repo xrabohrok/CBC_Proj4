@@ -133,6 +133,8 @@ int main()
 	
 	set_each_analog_state(1,1,1,0,0,0,0,0);
 	selectRooms();
+	setPath();
+	link = pathSize;
     //main loop
     while(1)    
 	{ 
@@ -147,29 +149,13 @@ int main()
 		}
 		if(triggered == 0)
 		{
-			if(branch[goal][link][0] == cellY && branch[goal][link][1] == cellX )
+			if(path[link][0] == cellY && path[link][1] == cellX )
 			{
 				//advance goal chain
-				link += direction;	
+				link -= direction;	
 				//overlimit	
-				if(link >= 5 || link < 0)
-				{
-					if (link < 0)	
-					{	
-						//got to beginning, send us on a new adventure
-						goal++;	
-						if (goal > 2)	
-							goal = 0;
-					}
-					direction *= -1;	
-					link += 2 * direction;
-				}
-				else if(branch[goal][link][0] == -1)	
-				{
-					direction *= -1;
-					link += 2 * direction;
-				}
-				printf("new Destination: %d, %d\n", branch[goal][link][0], branch[goal][link][1]);
+
+				printf("new Destination: %d, %d\n", path[link][0], path[link][1]);
 			}
 			//am I facing goal?	
 			//needs to be...(x resolved first, unless map says no)
@@ -180,53 +166,53 @@ int main()
 			int vert = 0;
 			while (goalDir ==-1)
 			{
-				if((vert == 1 || cellX > branch[goal][link][1]) && map[cellY][cellX-1] == 0)
+				if((vert == 1 || cellX > path[link][1]) && map[cellY][cellX-1] == 0)
 				{
 					goalDir = 1;
 					printf("west\n");
 				}	
 				else
 				{
-					if(cellX > branch[goal][link][1])
+					if(cellX > path[link][1])
 					{
 						horiz = 1;
 					}
 				}
 				
-				if((vert == 1 || cellX < branch[goal][link][1]) && map[cellY][cellX+1] == 0)
+				if((vert == 1 || cellX < path[link][1]) && map[cellY][cellX+1] == 0)
 				{
 					goalDir = 3;	
 					printf("east\n");	
 				}
 				else
 				{
-					if(cellX < branch[goal][link][1])
+					if(cellX < path[link][1])
 					{
 						horiz = 1;
 					}
 				}
 				
-				if((horiz == 1 || cellY > branch[goal][link][0]) && map[cellY-1][cellX] == 0)
+				if((horiz == 1 || cellY > path[link][0]) && map[cellY-1][cellX] == 0)
 				{	
 					goalDir = 0;
 					printf("north\n");	
 				}
 				else
 				{
-					if(cellY > branch[goal][link][0])
+					if(cellY > path[link][0])
 					{
 						vert = 1;
 					}
 				}
 				
-				if((horiz == 1 || cellY < branch[goal][link][0]) && map[cellY+1][cellX] == 0)
+				if((horiz == 1 || cellY < path[link][0]) && map[cellY+1][cellX] == 0)
 				{	
 					goalDir = 2;	
 					printf("south\n");
 				}
 				else
 				{
-					if(cellY < branch[goal][link][0])
+					if(cellY < path[link][0])
 					{
 						vert = 1;
 					}
@@ -235,7 +221,12 @@ int main()
 			//if not right facing, resolve now
 			if(facing != goalDir){				
 					printf("%d vs %d", facing, goalDir);
-					Rotate90(0);					
+					if((facing + 1)%4 == goalDir%4)
+					Rotate90(0);
+					else if((facing - 1)%4 == goalDir%4)
+					Rotate90(1);
+					else
+					Rotate90(0);	
 			}
 			else
 			moveSquare();
@@ -281,6 +272,9 @@ void selectRooms(){
 	printf("Hit A button to start search\n");
 	while(!a_button());
 	sleep(2.0);
+	
+	cellX = dests[currentRoom][0];
+	cellY = dests[currentRoom][1];
 	
 	//now that we know our destination and start, we can figure out a path
 	
@@ -579,6 +573,8 @@ void setPath()
 	pathSize = 0;
 	while (! (currentX == cellX && currentY == cellY))
 	{
+		
+		printf("(%d , %d)\n", currentX, currentY);
 		path[pathSize][0] = currentX;
 		path[pathSize][1] = currentY;
 		pathSize++;
@@ -723,7 +719,6 @@ void moveTowardTargetByGrid(){
 	int y;
 	track_update();
 	int size = track_size(targetColor,0);
-	int ETsensorData = 0;
 	//0 left, 1 center, 2 right;
 	int turn = 1;
 	while(1){
@@ -754,6 +749,9 @@ void moveTowardTargetByGrid(){
 					break;
 			}
 			ao();
+			printf("Robot Position (world): %d, %d\n",cellX,cellY);
+			printf("Target Position (robot): 1, 0\n");
+			printf("Target Position (world: %d, %d\n",targetX,targetY);
 			return;
 		}
 		else
