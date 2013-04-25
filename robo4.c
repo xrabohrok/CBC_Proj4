@@ -26,7 +26,7 @@ int map[11][11] =
  
  //x,y
 int dests[5][2] = {
-	{-1,-1},
+	{-1,-2},
 	{7,4},
 	{7,6},
 	{3,1},
@@ -104,7 +104,7 @@ int targetY;
 float posX; //meters
 float posY; //meters
 float rot;  //rad
-int link; //of nodes of chain
+int links; //of nodes of chain
 
 
 struct cell{
@@ -126,7 +126,7 @@ int main()
 	int goalDir = 0;
 	
 	
-	link = 0;
+	links = 0;
 	int triggered = 0;
 	
 	
@@ -140,7 +140,7 @@ int main()
 	set_each_analog_state(1,1,1,0,0,0,0,0);
 	selectRooms();
 	setPath();
-	link = pathSize -1;
+	links = pathSize -1;
     //main loop
     while(1)    
 	{ 
@@ -155,35 +155,36 @@ int main()
 		}
 		if(triggered == 0)
 		{
-			printf("Testing %d, %d, %d, %d\n",path[link][1],cellY,path[link][0],cellX);
-			if(path[link][1] == cellY && path[link][0] == cellX )
+			printf("Testing goal to actual %d, %d, %d, %d\n",path[links][1],cellY,path[links][0],cellX);
+			if(path[links][1] == cellY && path[links][0] == cellX )
 			{
 				//advance goal chain
 				if(backTrack == 0)
 				{
-					link--;
+					links--;
 					//reached the end
-					if(link < 0)
+					if(links < 0)
 					{
-						link = 0;
+						links += 2;
 						backTrack = 1;
+						printf("\nREVERSE path %d\n", pathSize);
 					}
+					
 				}
 				else if(backTrack == 1)
 				{
-					link++;
-					if(link > 4)
+					links++;
+					if(links > 4 || links > pathSize-1 )
 					{
-						link = 4;
+						links -= 2;
 						backTrack = 0;
+						printf("\nREVERSE BACK\n");
 					}
 				}
-				//overlimit	
 				
-				//the goal itself is blocked
 				
 
-				printf("\nnew Destination: %d, %d\n", path[link][0], path[link][1]);
+				printf("\nnew Destination: %d, %d\n", path[links][0], path[links][1]);
 			}
 			//am I facing goal?	
 			//needs to be...(x resolved first, unless map says no)
@@ -194,53 +195,53 @@ int main()
 			int vert = 0;
 			while (goalDir ==-1)
 			{
-				if((vert == 1 || cellX > path[link][0]) && map[cellY][cellX-1] == 0)
+				if((vert == 1 || cellX > path[links][0]) && map[cellY][cellX-1] == 0)
 				{
 					goalDir = 1;
 					printf("west\n");
 				}	
 				else
 				{
-					if(cellX > path[link][0])
+					if(cellX > path[links][0])
 					{
 						horiz = 1;
 					}
 				}
 				
-				if((vert == 1 || cellX < path[link][0]) && map[cellY][cellX+1] == 0)
+				if((vert == 1 || cellX < path[links][0]) && map[cellY][cellX+1] == 0)
 				{
 					goalDir = 3;	
 					printf("east\n");	
 				}
 				else
 				{
-					if(cellX < path[link][0])
+					if(cellX < path[links][0])
 					{
 						horiz = 1;
 					}
 				}
 				
-				if((horiz == 1 || cellY > path[link][1]) && map[cellY-1][cellX] == 0)
+				if((horiz == 1 || cellY > path[links][1]) && map[cellY-1][cellX] == 0)
 				{	
 					goalDir = 0;
 					printf("north\n");	
 				}
 				else
 				{
-					if(cellY > path[link][1])
+					if(cellY > path[links][1])
 					{
 						vert = 1;
 					}
 				}
 				
-				if((horiz == 1 || cellY < path[link][1]) && map[cellY+1][cellX] == 0)
+				if((horiz == 1 || cellY < path[links][1]) && map[cellY+1][cellX] == 0)
 				{	
 					goalDir = 2;	
 					printf("south\n");
 				}
 				else
 				{
-					if(cellY < path[link][1])
+					if(cellY < path[links][1])
 					{
 						vert = 1;
 					}
@@ -571,23 +572,23 @@ void setPath()
 	
 	map2[currentY][currentX].currCost = 1;
 	
-	printf("from %d, %d to %d, %d\n", currentX, currentY, destX, destY);
+	//printf("from %d, %d to %d, %d\n", currentX, currentY, destX, destY);
 	//begin A*.
 	while(currentX != destX || currentY != destY)
 	{
-		printf("\t proc %d, %d\n", currentX, currentY);
+		//printf("\t proc %d, %d\n", currentX, currentY);
 		//find cheapest node
 		j = 0;
 		while (stack[j][0] == -1 && j < stackHead)
 			j++;
 		lowCost = map2[stack[j][1]][stack[j][0]].currCost;
 		focus = j;
-		printf("j+1: %d, stackHead: %d\n",j+1,stackHead);
+		//printf("j+1: %d, stackHead: %d\n",j+1,stackHead);
 		for(i = 0; i < stackHead; i++)
 		{
 			if( map2[stack[i][1]][stack[i][0]].currCost < lowCost && stack[i][0] != -1)
 			{
-				printf("lowcost: %d, currCost: %d\n", lowCost, map2[stack[i][1]][stack[i][0]].currCost); 
+				//printf("lowcost: %d, currCost: %d\n", lowCost, map2[stack[i][1]][stack[i][0]].currCost); 
 				focus = i;
 				lowCost = map2[stack[i][1]][stack[i][0]].currCost;
 			}
@@ -613,7 +614,7 @@ void setPath()
 				salePrice = map2[currentY ][currentX ].currCost + map2[currentY + directions[j][1]][currentX + directions[j][0]].cost + abs(destX - (currentX + directions[j][0])) + abs(destY - (currentY + directions[j][1]));
 				//is it in closed?
 				
-				printf(" cost: %d\n", salePrice);
+				//printf(" cost: %d\n", salePrice);
 				for(i = 0; i < closedHead; i++)
 				{
 					if((closed[i][0] == currentX + directions[j][0]) && (currentY + directions[j][1] == closed[i][1]))
@@ -647,7 +648,7 @@ void setPath()
 					map2[currentY + directions[j][1]][currentX + directions[j][0]].prevY = currentY;
 					if(map[currentY + directions[j][1]][currentX + directions[j][0]] == 0){
 						pushStack(currentX + directions[j][0], currentY + directions[j][1]);
-						printf("pushed\n");
+						//printf("pushed\n");
 					}
 				}
 			}
@@ -676,7 +677,7 @@ void setPath()
 		currentY = map2[j][i].prevY;
 	}
 
-	
+	links = pathSize -1;
 	//...path should now be up to date
 		
 	
@@ -804,7 +805,6 @@ int checkForObstacle(int onPath){
 							dests[targetRoom][1] = secondaryDests[targetRoom][1];
 							
 							setPath();
-							link = pathSize -1;
 						}
 						else
 							setPath();
@@ -891,9 +891,9 @@ void moveTowardTargetByGrid(){
 					break;
 			}
 			ao();
-			printf("Robot Position (world): %d, %d\n",cellX,cellY);
-			printf("Target Position (robot): 1, 0\n");
-			printf("Target Position (world): %d, %d\n",targetX,targetY);
+			printf("Robot Position (world): %d, %d\n",cellX, 11 - cellY);
+			//printf("Target Position (robot): 1, 0\n");
+			printf("Target Position (world): %d, %d\n",targetX, 11 - targetY);
 			exit(1);
 			return;
 		}
